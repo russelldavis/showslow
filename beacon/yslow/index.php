@@ -55,7 +55,7 @@ if (!is_null($post) && array_key_exists('u', $post) && array_key_exists('g', $po
 	$ycsstop	= $grades['ycsstop']['score'];
 	$yjsbottom	= $grades['yjsbottom']['score'];
 	$yexpressions	= $grades['yexpressions']['score'];
-	$yexternal	= $grades['yexternal']['score'];
+	$yexternal	= isset($grades['yexternal']['score']) ? (int)$grades['yexternal']['score'] : 'NULL';
 	$ydns		= $grades['ydns']['score'];
 	$yminify	= $grades['yminify']['score'];
 	$yredirects	= $grades['yredirects']['score'];
@@ -84,7 +84,7 @@ if (!is_null($post) && array_key_exists('u', $post) && array_key_exists('g', $po
 	VALUES (inet_aton('%s'), '%s', '%d',
 		'%d', '%d', '%d', '%s', '%d',
 		'%d', '%d', '%d', '%d', '%d', '%d',
-		'%d', '%d', '%d', '%d', '%d',
+		'%d', '%d', %s, '%d', '%d',
 		'%d', '%d', '%d', '%d', '%d',
 		'%d', '%d', '%d', '%d', '%d',
 		'%d', '%d', '%s'
@@ -151,7 +151,7 @@ if (!is_null($post) && array_key_exists('u', $post) && array_key_exists('g', $po
 	VALUES (inet_aton('%s'), '%s', '%d',
 		'%d', '%d', '%d', '%s', '%d',
 		'%d', '%d', '%d', '%d', '%d', '%d',
-		'%d', '%d', '%d', '%d', '%d',
+		'%d', '%d', %s, '%d', '%d',
 		'%d', '%d', '%d', '%d', '%d',
 		'%d', '%d', '%d', '%d', '%d',
 		'%d', '%d'
@@ -172,7 +172,7 @@ if (!is_null($post) && array_key_exists('u', $post) && array_key_exists('g', $po
 		mysql_real_escape_string($_GET['ycsstop']),
 		mysql_real_escape_string($_GET['yjsbottom']),
 		mysql_real_escape_string($_GET['yexpressions']),
-		mysql_real_escape_string($_GET['yexternal']),
+		mysql_real_escape_string(isset($_GET['yexternal']) ? $_GET['yexternal'] : 'NULL'),
 		mysql_real_escape_string($_GET['ydns']),
 		mysql_real_escape_string($_GET['yminify']),
 		mysql_real_escape_string($_GET['yredirects']),

@@ -649,7 +649,11 @@ if ($havemetrics)
 					$value = $row[$provider_name.'_'.$metric[1]];
 
 					if (is_null($value)) {
-						?><td colspan="3" class="na">n/a</td><?php	
+						?>
+						<td class="na">n/a</td>
+						<td><span id="details_<?php echo $provider_name.'_'.$metric[1] ?>" class="details"></span></td>
+						<td></td>
+						<?php
 					} else {
 						if ($metric[2] == PERCENT_GRADE){
 							$pretty_score = prettyScore($value);
