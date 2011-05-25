@@ -10,9 +10,6 @@
 [submodule "svn-assets"]
 	path = svn-assets
 	url = git://github.com/sergeychernyshev/SVN-Assets.git
-[submodule "users"]
-	path = users
-	url = git://github.com/sergeychernyshev/UserBase.git
 [submodule "dbupgrade"]
 	path = dbupgrade
 	url = git://github.com/sergeychernyshev/DBUpgrade.git
@@ -22,3 +19,6 @@
 [submodule "flot"]
 	path = flot
 	url = git://github.com/flot/flot.git
+[submodule "users"]
+	path = users
+	url = git://github.com/sergeychernyshev/UserBase.git

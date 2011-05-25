@@ -21,8 +21,8 @@ function getShowSlowBase() {
 	}
 	else
 	{
-		error_log("[ShowSlow config] Warning: Can't determine site's host name, using www.example.com");
-		$host = 'www.example.com';
+		$host = gethostname();
+		error_log("[ShowSlow config] Warning: Can't determine site's host name, using $host");
 	}
 
 	$protocol = 'http';
@@ -256,6 +256,10 @@ $metric_types = array(
 	NUMBER =>		array( 'legend'	=> '',		'units'	=> ''),
 	PERCENTS =>		array( 'legend'	=> '0-100',	'units'	=> '%')
 );
+
+# defaults values for MySQL host and port
+$host = 'localhost';
+$port = 3306;
 
 # config will override defaults above
 require_once(dirname(__FILE__).'/config.php');
