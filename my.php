@@ -56,12 +56,16 @@ if ($maxURLsPerUser)
 		error_log(mysql_error());
 	}
 
-	if ($cnt = mysql_fetch_row($result) && $cnt[0] >= $maxURLsPerUser)
+	$cnt = mysql_fetch_row($result);
+
+	if (is_array($cnt) && $cnt[0] >= $maxURLsPerUser)
 	{
 		$noMoreURLs = true;
+		$MESSAGES[] = $maxURLsMessage;
 	}
 	mysql_free_result($result);
 }
+
 
 if (!$noMoreURLs && array_key_exists('url', $_REQUEST)) {
 	$url_id = getUrlId(resolveRedirects($_REQUEST['url']), false);
@@ -143,27 +147,14 @@ td, th { white-space: nowrap; }
 	padding-left:10px;
 }
 </style>
-<h1 style="margin-bottom: 0">Add URLs to monitor</h1>
-<div style="font-size: small; margin-bottom: 1em">User: <a href="users/edit.php"><?php echo $current_user->getName(); ?></a></div>
 
 <p>If you don't want to <a href="<?php echo $showslow_base; ?>configure.php">run YSlow, Page Speed and dynaTrace on your desktop</a>, you can add a URL to the list below and it'll be measured automatically every <?php echo $monitoringPeriod ?> hours.</p>
 
-<form action="" method="POST">
 <?php
-if ($noMoreURLs)
-{
-?>
-<p><?php echo $maxURLsMessage; ?></p>
-<div title="<?php echo htmlentities(strip_tags($maxURLsMessage)); ?>">Add URL: <input type="text" size="80" name="url" disabled="disabled"/><input type="submit" name="add" value="add" disabled="disabled"/></div>
-<?php } else { ?>
-Add URL: <input type="text" size="80" name="url"/><input type="submit" name="add" value="add" title="add URL to be measured"/>
-<?php
-}
-
 if (count($rows))
 {
 ?>
-<div style="width: 100%; overflow: hidden">
+<form action="" method="POST" style="width: 100%; overflow: hidden">
 	<table border="0" style="margin-top: 1em">
 	<tr style="font-size: smaller; font-weight: bold">
 	<td style="text-align: left; padding-right: 0.7em">Timestamp</td>
@@ -241,10 +232,8 @@ if (count($rows))
 	mysql_free_result($result);
 	?>
 	</table>
-	</div>
+	</form>
 <?php 
 }
-?>
-</form>
-<?php
+
 require_once(dirname(__FILE__).'/footer.php');

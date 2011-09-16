@@ -12,137 +12,6 @@ $versions = array();
 // Add new migrations on top, right below this line.
 
 /* -------------------------------------------------------------------------------------------------------
- * VERSION 31
- * Switching metric tables to INNODB engine for better performance
-*/
-$versions[31]['up'][] = 'ALTER TABLE yslow2 ENGINE = INNODB';
-$versions[31]['up'][] = 'ALTER TABLE pagetest ENGINE = INNODB';
-$versions[31]['up'][] = 'ALTER TABLE metric ENGINE = INNODB';
-$versions[31]['up'][] = 'ALTER TABLE har ENGINE = INNODB';
-$versions[31]['up'][] = 'ALTER TABLE event ENGINE = INNODB';
-$versions[31]['up'][] = 'ALTER TABLE dynatrace ENGINE = INNODB';
-$versions[31]['up'][] = 'ALTER TABLE dommonster ENGINE = INNODB';
-$versions[31]['up'][] = 'ALTER TABLE pagespeed ENGINE = INNODB';
-$versions[31]['down'][] = 'ALTER TABLE pagespeed ENGINE = MyISAM';
-$versions[31]['down'][] = 'ALTER TABLE dommonster ENGINE = MyISAM';
-$versions[31]['down'][] = 'ALTER TABLE dynatrace ENGINE = MyISAM';
-$versions[31]['down'][] = 'ALTER TABLE event ENGINE = MyISAM';
-$versions[31]['down'][] = 'ALTER TABLE har ENGINE = MyISAM';
-$versions[31]['down'][] = 'ALTER TABLE metric ENGINE = MyISAM';
-$versions[31]['down'][] = 'ALTER TABLE pagetest ENGINE = MyISAM';
-$versions[31]['down'][] = 'ALTER TABLE yslow2 ENGINE = MyISAM';
-
-/* -------------------------------------------------------------------------------------------------------
- * VERSION 30
- * Switching urls table to INNODB engine for better performance
-*/
-$versions[30]['up'][] = 'ALTER TABLE urls ENGINE = INNODB';
-$versions[30]['down'][] = 'ALTER TABLE urls ENGINE = MyISAM';
-
-/* -------------------------------------------------------------------------------------------------------
- * VERSION 29
- * Switching to INNODB engine for better performance
-*/
-$versions[29]['up'][] = 'ALTER TABLE user_urls ENGINE = INNODB';
-$versions[29]['down'][] = 'ALTER TABLE user_urls ENGINE = MyISAM';
-
-/* -------------------------------------------------------------------------------------------------------
- * VERSION 28
- * Adding more WebPageTest fields
-*/
-$versions[28]['up'][] = "ALTER TABLE `pagetest`
-DROP test_url,
-ADD `version` VARCHAR( 255 ) NULL COMMENT 'WPT version' AFTER `url_id`,
-ADD `r_aft` MEDIUMINT(3) UNSIGNED NULL COMMENT '[first view] Above The Fold Time (ms)' AFTER r_TTFB,
-ADD `f_aft` MEDIUMINT(3) UNSIGNED NULL COMMENT '[repeat view] Above The Fold Time (ms)' AFTER r_TTFB,
-ADD `r_domElements` SMALLINT(2) UNSIGNED NULL COMMENT '[repeat view] Number of DOM Elements' AFTER r_render,
-ADD `f_domElements` SMALLINT(2) UNSIGNED NULL COMMENT '[first view] Number of DOM Elements' AFTER r_render,
-ADD `r_connections` SMALLINT(2) UNSIGNED NULL COMMENT '[repeat view] Number of connections' AFTER r_requestsDoc,
-ADD `f_connections` SMALLINT(2) UNSIGNED NULL COMMENT '[first view] Number of connections' AFTER r_requestsDoc,
-ADD f_score_cache TINYINT(1) UNSIGNED NULL COMMENT 'Cache Static',
-ADD r_score_cache TINYINT(1) UNSIGNED NULL COMMENT 'Cache Static',
-ADD f_score_cdn TINYINT(1) UNSIGNED NULL COMMENT 'Use a CD',
-ADD r_score_cdn TINYINT(1) UNSIGNED NULL COMMENT 'Use a CD',
-ADD f_score_gzip TINYINT(1) UNSIGNED NULL COMMENT 'GZIP text',
-ADD r_score_gzip TINYINT(1) UNSIGNED NULL COMMENT 'GZIP text',
-ADD f_score_cookies TINYINT(1) UNSIGNED NULL COMMENT 'Cookies',
-ADD r_score_cookies TINYINT(1) UNSIGNED NULL COMMENT 'Cookies',
-ADD f_score_keep_alive TINYINT(1) UNSIGNED NULL COMMENT 'Persistent connections (keep-alive)',
-ADD r_score_keep_alive TINYINT(1) UNSIGNED NULL COMMENT 'Persistent connections (keep-alive)',
-ADD f_score_minify TINYINT(1) UNSIGNED NULL COMMENT 'Minify JavaScript',
-ADD r_score_minify TINYINT(1) UNSIGNED NULL COMMENT 'Minify JavaScript',
-ADD f_score_combine TINYINT(1) UNSIGNED NULL COMMENT 'Combine CSS/JS',
-ADD r_score_combine TINYINT(1) UNSIGNED NULL COMMENT 'Combine CSS/JS',
-ADD f_score_compress TINYINT(1) UNSIGNED NULL COMMENT 'Compress Images',
-ADD r_score_compress TINYINT(1) UNSIGNED NULL COMMENT 'Compress Images',
-ADD f_score_etags TINYINT(1) UNSIGNED NULL COMMENT 'No Etags',
-ADD r_score_etags TINYINT(1) UNSIGNED NULL COMMENT 'No Etags',
-ADD f_gzip_total MEDIUMINT(3) UNSIGNED NULL COMMENT 'Total size of compressible text',
-ADD r_gzip_total MEDIUMINT(3) UNSIGNED NULL COMMENT 'Total size of compressible text',
-ADD f_gzip_savings MEDIUMINT(3) UNSIGNED NULL COMMENT 'Potential text compression savings',
-ADD r_gzip_savings MEDIUMINT(3) UNSIGNED NULL COMMENT 'Potential text compression savings',
-ADD f_minify_total MEDIUMINT(3) UNSIGNED NULL COMMENT 'Total size of minifiable text',
-ADD r_minify_total MEDIUMINT(3) UNSIGNED NULL COMMENT 'Total size of minifiable text',
-ADD f_minify_savings MEDIUMINT(3) UNSIGNED NULL COMMENT 'Potential text minification savings',
-ADD r_minify_savings MEDIUMINT(3) UNSIGNED NULL COMMENT 'Potential text minification savings',
-ADD f_image_total MEDIUMINT(3) UNSIGNED NULL COMMENT 'Total size of compressible images',
-ADD r_image_total MEDIUMINT(3) UNSIGNED NULL COMMENT 'Total size of compressible images',
-ADD f_image_savings MEDIUMINT(3) UNSIGNED NULL COMMENT 'Potential image compression savings',
-ADD r_image_savings MEDIUMINT(3) UNSIGNED NULL COMMENT 'Potential image compression savings',
-ADD UNIQUE (`test_id`)
-";
-
-$versions[28]['up'][] = "ALTER TABLE urls
-ADD pagetest_last_id BIGINT(20) UNSIGNED NULL DEFAULT NULL COMMENT 'Last measurement ID for WebPageTest beacon' AFTER har_last_id,
-ADD pagetest_refresh_request TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT 0 COMMENT  'Set it to one when WebPageTest score needs refreshing' AFTER dt_refresh_request
-";
-
-$versions[28]['down'][] = "ALTER TABLE urls
-DROP pagetest_last_id,
-DROP pagetest_refresh_request";
-$versions[28]['down'][] = "ALTER TABLE `pagetest`
-DROP `version`,
-DROP f_aft,
-DROP r_aft,
-DROP f_connections,
-DROP r_connections,
-DROP f_domElements,
-DROP r_domElements,
-DROP f_score_cache,
-DROP r_score_cache,
-DROP f_score_cdn,
-DROP r_score_cdn,
-DROP f_score_gzip,
-DROP r_score_gzip,
-DROP f_score_cookies,
-DROP r_score_cookies,
-DROP f_score_keep_alive,
-DROP r_score_keep_alive,
-DROP f_score_minify,
-DROP r_score_minify,
-DROP f_score_combine,
-DROP r_score_combine,
-DROP f_score_compress,
-DROP r_score_compress,
-DROP f_score_etags,
-DROP r_score_etags,
-DROP f_gzip_total,
-DROP r_gzip_total,
-DROP f_gzip_savings,
-DROP r_gzip_savings,
-DROP f_minify_total,
-DROP r_minify_total,
-DROP f_minify_savings,
-DROP r_minify_savings,
-DROP f_image_total,
-DROP r_image_total,
-DROP f_image_savings,
-DROP r_image_savings,
-ADD `test_url` BLOB NOT NULL COMMENT 'PageTest result URL to redirect to' AFTER test_id,
-DROP INDEX (`test_id`)
-";
-
-/* -------------------------------------------------------------------------------------------------------
  * VERSION 27
  * Making PageSpeed metrics optional in case some rules didn't run or didn't produce valid result
 */
@@ -231,17 +100,65 @@ $versions[26]['down'][] = "ALTER TABLE `dynatrace` DROP INDEX `url_id`";
 
 
 /* -------------------------------------------------------------------------------------------------------
- * VERSION 24-25, 14-15
- * removed userbase database setup - leave it to userbase's scripts
+ * VERSION 25
+ * Somehow missed one of the UserBase tables
 */
-$versions[25]['up'][]		= "SELECT 1";
-$versions[25]['udown'][]	= "SELECT 1";
-$versions[24]['up'][]		= "SELECT 1";
-$versions[24]['udown'][]	= "SELECT 1";
-$versions[15]['up'][]		= "SELECT 1";
-$versions[15]['udown'][]	= "SELECT 1";
-$versions[14]['up'][]		= "SELECT 1";
-$versions[14]['udown'][]	= "SELECT 1";
+$versions[25]['up'][]	= "CREATE TABLE IF NOT EXISTS u_user_features (
+`user_id` INT( 10 ) UNSIGNED NOT NULL COMMENT  'User ID',
+`feature_id` INT( 2 ) UNSIGNED NOT NULL COMMENT  'Feature ID',
+PRIMARY KEY (  `user_id` ,  `feature_id` )
+) ENGINE = INNODB COMMENT = 'Keeps feature list for all users'";
+$versions[25]['up'][] = "ALTER TABLE `u_user_features`
+DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci";
+
+$versions[25]['down'][] = "DROP TABLE IF EXISTS u_user_features";
+
+/* -------------------------------------------------------------------------------------------------------
+ * VERSION 24
+ * Added UserBase accounts table which we never created
+*/
+$versions[24]['up'][] = "CREATE TABLE IF NOT EXISTS `u_accounts` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` text,
+  `plan` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT 'Payment plan ID',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8";
+
+$versions[24]['up'][] = "CREATE TABLE IF NOT EXISTS `u_account_users` (
+  `account_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `user_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `role` tinyint(4) unsigned NOT NULL DEFAULT '0',
+  KEY `user_account` (`account_id`),
+  KEY `account_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8";
+
+$versions[24]['up'][] = "ALTER TABLE `u_account_users`
+  ADD CONSTRAINT `account_user` FOREIGN KEY (`user_id`) REFERENCES `u_users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `u_account_users_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `u_accounts` (`id`),
+  ADD CONSTRAINT `u_account_users_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `u_users` (`id`)";
+
+$versions[24]['up'][] = "CREATE TABLE IF NOT EXISTS `u_account_features` (
+  `account_id` int(10) unsigned NOT NULL COMMENT 'User ID',
+  `feature_id` int(2) unsigned NOT NULL COMMENT 'Feature ID',
+  PRIMARY KEY (`account_id`,`feature_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Keeps feature list for all users'";
+
+$versions[24]['up'][] = "CREATE TABLE IF NOT EXISTS `u_user_preferences` (
+  `user_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `current_account_id` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`user_id`),
+  KEY `preference_current_account` (`current_account_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1";
+
+$versions[24]['up'][] = "ALTER TABLE `u_user_preferences`
+  ADD CONSTRAINT `preference_user` FOREIGN KEY (`user_id`) REFERENCES `u_users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `user_preferences_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `u_users` (`id`),
+  ADD CONSTRAINT `user_preferences_ibfk_2` FOREIGN KEY (`current_account_id`) REFERENCES `u_accounts` (`id`)";
+
+$versions[24]['down'][] = "DROP TABLE IF EXISTS u_user_preferences";
+$versions[24]['down'][] = "DROP TABLE IF EXISTS u_account_features";
+$versions[24]['down'][] = "DROP TABLE IF EXISTS u_account_users";
+$versions[24]['down'][] = "DROP TABLE IF EXISTS u_accounts";
 
 /* -------------------------------------------------------------------------------------------------------
  * VERSION 23
@@ -415,8 +332,34 @@ $versions[16]['down'][]	= "ALTER TABLE `pagetest`
   DROP `f_docTime`,
   DROP `r_docTime`,
   DROP `f_domTime`,
-  DROP `r_domTime`
+  DROP `r_domTime`;";
+
+/* -------------------------------------------------------------------------------------------------------
+ * VERSION 15
+ * UserBase will now use it's own DBUpgrade instance
+ * let's create base version for it since all tables were maintained here
+*/
+$versions[15]['up'][]	= "CREATE TABLE `3f7f6ece338d68f7fbd069377de434e0_db_version` (
+  `version` int(10) unsigned NOT NULL DEFAULT '1',
+  PRIMARY KEY (`version`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 ";
+$versions[15]['down'][]	= "DROP TABLE `3f7f6ece338d68f7fbd069377de434e0_db_version`";
+
+/* -------------------------------------------------------------------------------------------------------
+ * VERSION 14
+ * Added basic UserBase activity tracking
+*/
+$versions[14]['up'][]	= "CREATE TABLE `u_activity` (
+  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Time of activity',
+  `user_id` int(10) unsigned NOT NULL COMMENT 'User ID',
+  `activity_id` int(2) unsigned NOT NULL COMMENT 'Activity ID',
+  KEY `time` (`time`),
+  KEY `user_id` (`user_id`),
+  KEY `activity_id` (`activity_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='Stores user activities'
+";
+$versions[14]['down'][]	= "DROP TABLE `u_activity`";
 
 /* version 13
  *
@@ -538,6 +481,38 @@ $versions[7]['down'][] = "ALTER TABLE urls MODIFY last_update TIMESTAMP ON UPDAT
  *
  * Adding userbase instance
 */
+$versions[6]['up'][] = "CREATE TABLE `u_users` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `regtime` timestamp NOT NULL default CURRENT_TIMESTAMP COMMENT 'Time of registration',
+  `name` text NOT NULL,
+  `username` varchar(25) default NULL,
+  `email` varchar(255) default NULL,
+  `pass` varchar(40) NOT NULL COMMENT 'Password digest',
+  `salt` varchar(13) NOT NULL COMMENT 'Salt',
+  `temppass` varchar(13) default NULL COMMENT 'Temporary password used for password recovery',
+  `temppasstime` timestamp NULL default NULL COMMENT 'Temporary password generation time',
+  `requirespassreset` tinyint(1) NOT NULL default '0' COMMENT 'Flag indicating that user must reset their password before using the site',
+  `fb_id` bigint(20) unsigned default NULL COMMENT 'Facebook user ID',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `fb_id` (`fb_id`)
+) ENGINE=InnoDB;";
+$versions[6]['up'][] = "CREATE TABLE `u_googlefriendconnect` (
+  `user_id` int(10) unsigned NOT NULL COMMENT 'User ID',
+  `google_id` varchar(255) NOT NULL COMMENT 'Google Friend Connect ID',
+  `userpic` text NOT NULL COMMENT 'Google Friend Connect User picture',
+  PRIMARY KEY  (`user_id`,`google_id`),
+  CONSTRAINT `gfc_user` FOREIGN KEY (`user_id`) REFERENCES `u_users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;";
+$versions[6]['up'][] = "CREATE TABLE `u_invitation` (
+  `code` char(10) NOT NULL COMMENT 'Code',
+  `created` timestamp NOT NULL default CURRENT_TIMESTAMP COMMENT 'When invitation was created',
+  `issuedby` bigint(10) unsigned NOT NULL default '1' COMMENT 'User who issued the invitation. Default is Sergey.',
+  `sentto` text COMMENT 'Note about who this invitation was sent to',
+  `user` bigint(10) unsigned default NULL COMMENT 'User name',
+  PRIMARY KEY  (`code`)
+) ENGINE=InnoDB;";
 $versions[6]['up'][] = "CREATE TABLE `user_urls` (
   `user_id` int(10) unsigned NOT NULL COMMENT 'User ID',
   `url_id` bigint(20) unsigned NOT NULL COMMENT 'URL ID to measure',
@@ -545,6 +520,9 @@ $versions[6]['up'][] = "CREATE TABLE `user_urls` (
 ) ENGINE=MyISAM;";
 
 $versions[6]['down'][] = "DROP TABLE IF EXISTS `user_urls`";
+$versions[6]['down'][] = "DROP TABLE IF EXISTS `u_googlefriendconnect`";
+$versions[6]['down'][] = "DROP TABLE IF EXISTS `u_invitation`";
+$versions[6]['down'][] = "DROP TABLE IF EXISTS `u_users`";
 
 /* version 5
  *

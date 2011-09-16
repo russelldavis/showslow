@@ -16,24 +16,20 @@ if (array_key_exists('search', $_GET) && trim($_GET['search']) != '') {
 $TITLE = 'URLs measured';
 $SECTION = 'all';
 require_once(dirname(__FILE__).'/header.php');
+
+if ($disableUnfilteredURLList && is_null($searchstring)) { // start show only filtered results
+	?><p align="center"><i>Use form above to search URLs</i></p><?php
+} else {
 ?>
 <style>
-.current {
+.paginator .current {
 	text-decoration: none;
 	font-weight: bold;
 	color: black;
 }
 </style>
-<h1>URLs measured</h1>
+<h2>URLs measured</h2>
 <?php
-
-if (array_key_exists('group', $_GET)) {
-	$current_group = $_GET['group'];
-} else if (!is_null($DefaultURLGroup)) {
-	$current_group = $DefaultURLGroup;
-} else {
-	$current_group = '__show_all__';
-}
 
 $subset = null;
 
@@ -95,7 +91,7 @@ if (is_array($URLGroups) && count($URLGroups) > 0) {
 		}
 	}
 ?></ul>
-<hr size="1">
+
 <?php
 }
 ?>
@@ -124,6 +120,7 @@ if (is_array($URLGroups) && count($URLGroups) > 0) {
 </style>
 <div style="width: 100%; overflow: hidden">
 <?php
+
 $perPage = 50;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) {
@@ -213,26 +210,15 @@ while ($row = mysql_fetch_assoc($result)) {
 		$dynatrace = true;
 	}
 }
-?>
-<form name="searchform" action="" method="GET">
-Search URLs:
-<input type="text" id="search" size="80" name="search" value="<?php echo is_null($searchstring) ? '' : htmlentities(trim($_GET['search']))?>"/>
-<input type="submit" value="search"/>
-<?php if ($DefaultURLGroup != $current_group) { ?>
-<input type="hidden" name="group" value="<?php echo htmlentities($current_group) ?>"/>
-<?php } ?>
-<input type="button" value="clear" onclick="document.getElementById('search').value=''; document.searchform.submit()">
-</form>
-<hr size="1">
-<?php
+
 if ($yslow || $pagespeed || $dynatrace) {
-?>
-<div class="paginator">
-<?php
 	$pages->paginate($showslow_base.'all.php');
-	echo $pages->display_pages();
+	if ($pages->num_pages > 1) {
+	?><div class="paginator"><?php
+		echo $pages->display_pages();
+	?></div><?php
+	}
 ?>
-</div>
 <table>
 <tr><th>Timestamp</th>
 <?php if ($yslow) { ?><th colspan="2">YSlow grade</th><?php } ?>
@@ -279,15 +265,17 @@ foreach ($rows as $row) {
 mysql_free_result($result);
 ?>
 </table>
-<div class="paginator">
 <?php
-	echo $pages->display_pages();
-?>
-</div>
-<?php
+	if ($pages->num_pages > 1) {
+	?><div class="paginator"><?php
+		echo $pages->display_pages();
+	?></div><?php
+	}
 } else {
 	?><p>No data is gathered yet</p><?php
 }
+
+} // end show only filtered results
 ?>
 
 </div>

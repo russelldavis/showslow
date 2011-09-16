@@ -5,10 +5,11 @@ $showslow_root = dirname(__FILE__).'/';
 # function to generate URL from current showslow_root
 function getShowSlowBase() {
 	global $showslow_root;
+	$showslow_root = str_replace(DIRECTORY_SEPARATOR, '/', $showslow_root);
 
 	// Chopping of trailing slash which is not supposed to be there in Apache config
 	// See: http://httpd.apache.org/docs/2.0/mod/core.html#documentroot
-	$docroot = $_SERVER['DOCUMENT_ROOT'];
+	$docroot = str_replace(DIRECTORY_SEPARATOR, '/', $_SERVER['DOCUMENT_ROOT']);
 	if (substr($docroot, -1) == '/') {
 		$docroot = substr($docroot, 0, -1);
 	}
@@ -21,8 +22,11 @@ function getShowSlowBase() {
 	}
 	else
 	{
-		$host = gethostname();
-		error_log("[ShowSlow config] Warning: Can't determine site's host name, using $host");
+		$host = php_uname('n');
+		// if not running from command line, send warning to the log file
+		if (php_sapi_name() !== 'cli') {
+			error_log("[ShowSlow config] Warning: Can't determine site's host name, using $host");
+		}
 	}
 
 	$protocol = 'http';
@@ -83,13 +87,15 @@ $enabledMetrics = array(
 	'yslow'		=> true,
 	'pagespeed'	=> true,
 	'dynatrace'	=> true,
+	'webpagetest'	=> true,
 	'dommonster'	=> true
 );
 
 $defaultGraphMetrics = array(
 	'yslow' => array('o', 'w', 'r'),
 	'pagespeed' => array('o', 'l', 'r', 'w'),
-	'dynatrace' => array('rank')
+	'dynatrace' => array('rank'),
+	'webpagetest' => array('f_aft')
 );
 
 # If set to true, drop all query strings. If array, then match prefixes.
@@ -120,9 +126,10 @@ $showFeedbackButton = true;
 $addThisProfile = null;
 
 # how old should data be for deletion (in days)
+# also used to determine how much data to show on the graph
 # anything >0 will delete old data
 # don't forget to add a cron job to run deleteolddata.php
-$oldDataInterval = 60;
+$oldDataInterval = 180;
 
 # Enable this if you'd like to clean old yslow beacon details to conserve space
 # (beacon details are currently only used for tooltips for latest yslow breakdown)
@@ -130,7 +137,7 @@ $cleanOldYSlowBeaconDetails = false;
 
 $homePageMetaTags = '';
 
-# PageSpeed Online API key (https://code.google.com/apis/console/b/0/#access)
+# PageSpeed Online API key (https://code.google.com/apis/console/#access)
 $pageSpeedOnlineAPIKey = null;
 
 # this enables a form to run a test on WebPageTest.org
@@ -174,6 +181,10 @@ $noMaxURLsForUsers = array();
 # how long should monitoring scripts wait between measurements (in hours).
 $monitoringPeriod = 24;
 
+# disable paged browsing (which kills database and is quite useless anyway)
+# useful for instances with many urls
+$disableUnfilteredURLList = false;
+
 # Facebook connect properties, configure them here:
 # http://www.facebook.com/developers/createapp.php
 $facebookAPIKey = null;
@@ -195,32 +206,7 @@ require_once(dirname(__FILE__).'/svn-assets/asset_functions.php');
 loadAssetVersionsTSV(dirname(__FILE__).'/asset_versions.tsv');
 
 # Put description for ShowSlow instance into this variable - it'll be displayed on home page under the header.
-$ShowSlowIntro = '<p>Show Slow is an open source tool that helps monitor various website performance metrics over time. It captures the results of <a href="http://developer.yahoo.com/yslow/">YSlow</a> and <a href="http://code.google.com/speed/page-speed/">Page Speed</a> rankings and graphs them, to help you understand how various changes to your site affect its performance.</p>
-
-<p><a href="http://www.showslow.com/">www.ShowSlow.com</a> is a demonstration site that continuously measures the performance of a few reference web pages. It also allows for public metrics reporting.</p>
-
-<p>If you want to make your measurements publicly available on this page, see the instructions in <a href="configure.php">Configuring YSlow / Page Speed</a>. If you want to keep your measurements private, <b><a href="http://code.google.com/p/showslow/source/checkout">download Show Slow</a></b> from the SVN repository and install it on your own server.</p>
-
-<p>You can ask questions and discuss ShowSlow in our group <a href="http://groups.google.com/group/showslow">http://groups.google.com/group/showslow</a> or just leave feedback at <a href="http://showslow.uservoice.com">http://showslow.uservoice.com</a></p>
-
-<table cellpadding="0" cellspacing="0" border="0"><tr>
-<td valign="top"><style>
-#twitterbutton {
-	margin-right: 7px;
-	width: 58px;
-	height: 23px;
-	display: block;
-	background-image: url('.assetURL('follow.png').');
-	background-position: 0px 0px;
-}
-#twitterbutton:hover {
-	background-position: 0px -46px;
-}
-</style><a id="twitterbutton" href="http://twitter.com/showslow" target="_blank" title="follow @showslow on twitter"/></a></td>
-<td valign="top">
-<iframe src="http://www.facebook.com/plugins/like.php?href=http%253A%252F%252Fwww.showslow.com%252F&amp;layout=standard&amp;show_faces=false&amp;width=450&amp;action=recommend&amp;font&amp;colorscheme=light&amp;height=35" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:450px; height:23px;" allowTransparency="true"></iframe>
-</td>
-</tr></table>';
+$ShowSlowIntro = null;
 
 # configuring tabs
 $customLists = array();
@@ -231,8 +217,8 @@ $additionalMenuItems = array();
 # a list of admin user IDs for authentication into UserBase administration interface
 $instanceAdmins = array();
 
-# Enable Flot graphs (experimental)
-$enableFlot = false;
+# Enable Flot graphs (default now)
+$enableFlot = true;
 
 
 
@@ -419,6 +405,98 @@ $all_metrics = array(
 				array( 'DOM tree serialization time',	'bodycount',		MS,
 					null, 'levels', array(500, 1000))
 			)
+		)
+	),
+	'webpagetest' => array(
+		'title' => 'WebPageTest',
+		'description' => 'Data sent from WebPageTest instance located at <a href="'.$webPageTestBase.'" target="_blank">'.$webPageTestBase.'</a>',
+		'url' => 'http://www.webpagetest.org/',
+		'table' => 'pagetest',
+		'score_name' => 'score',
+		'metrics' => array(
+			'First view' => array(
+				array( 'Load Time',			'f_LoadTime',		MS),
+				array( 'Time to first byte',		'f_TTFB',		MS),
+				array( 'Time to first render',		'f_render',		MS),
+				array( 'Above the fold time',		'f_aft',		MS),
+				array( 'Number of DOM elements',	'f_domElements',	NUMBER),
+				array( 'Number of connections',		'f_connections',	NUMBER)
+			),
+			'First view (Document Complete)' => array(
+				array( 'Load Time',			'f_docTime',		MS),
+				array( 'Number of requests',		'f_requestsDoc',	NUMBER),
+				array( 'Bytes In',			'f_bytesInDoc',		BYTES),
+			),
+			'First view (Fully Loaded)' => array(
+				array( 'Load Time',			'f_fullyLoaded',	MS),
+				array( 'Number of requests',		'f_requests',		NUMBER),
+				array( 'Bytes In',			'f_bytesIn',		BYTES)
+			),
+			'First view Rankings Scores' => array(
+				array( 'Persistent connections (keep-alive)',
+									'f_score_keep_alive',	PERCENT_GRADE),
+				array( 'GZIP text',			'f_score_gzip',		PERCENT_GRADE),
+				array( 'Total size of compressible text',
+									'f_gzip_total',		BYTES),
+				array( 'Potential text compression savings',
+									'f_gzip_savings',	BYTES),
+				array( 'Compress Images',		'f_score_compress',	PERCENT_GRADE),
+				array( 'Total size of compressible images',
+									'f_image_total',	BYTES),
+				array( 'Potential image compression savings',
+									'f_image_savings',	BYTES),
+				array( 'Cache Static',			'f_score_cache',	PERCENT_GRADE),
+				array( 'Combine CSS/JS',		'r_score_combine',	PERCENT_GRADE),
+				array( 'Use a CDN',			'f_score_cdn',		PERCENT_GRADE),
+				array( 'Minify JavaScript',		'f_score_minify',	PERCENT_GRADE),
+				array( 'Total size of minifiable text',	'f_minify_total',	BYTES),
+				array( 'Potential text minification savings',
+									'f_minify_savings',	BYTES),
+				array( 'No cookies for static assets',	'f_score_cookies',	PERCENT_GRADE),
+				array( 'No Etags',			'f_score_etags',	PERCENT_GRADE)
+			),
+
+			'Repeat view' => array(
+				array( 'Load Time',			'r_LoadTime',		MS),
+				array( 'Time to first byte',		'r_TTFB',		MS),
+				array( 'Time to first render',		'r_render',		MS),
+				array( 'Above the fold time',		'r_aft',		MS),
+				array( 'Number of DOM elements',	'r_domElements',	NUMBER),
+				array( 'Number of connections',		'f_connections',	NUMBER)
+			),
+			'Repeat view (Document Complete)' => array(
+				array( 'Load Time',			'r_docTime',		MS),
+				array( 'Number of requests',		'r_requestsDoc',	NUMBER),
+				array( 'Bytes In',			'r_bytesInDoc',		BYTES)
+			),
+			'Repeat view (Fully Loaded)' => array(
+				array( 'Load Time',			'r_fullyLoaded',	MS),
+				array( 'Number of requests',		'r_requests',		NUMBER),
+				array( 'Bytes In',			'r_bytesIn',		BYTES)
+			),
+			'Repeat view Rankings Scores' => array(
+				array( 'Persistent connections (keep-alive)',
+									'f_score_keep_alive',	PERCENT_GRADE),
+				array( 'GZIP text',			'f_score_gzip',		PERCENT_GRADE),
+				array( 'Total size of compressible text',
+									'f_gzip_total',		BYTES),
+				array( 'Potential text compression savings',
+									'f_gzip_savings',	BYTES),
+				array( 'Compress Images',		'f_score_compress',	PERCENT_GRADE),
+				array( 'Total size of compressible images',
+									'f_image_total',	BYTES),
+				array( 'Potential image compression savings',
+									'f_image_savings',	BYTES),
+				array( 'Cache Static',			'f_score_cache',	PERCENT_GRADE),
+				array( 'Combine CSS/JS',		'r_score_combine',	PERCENT_GRADE),
+				array( 'Use a CDN',			'f_score_cdn',		PERCENT_GRADE),
+				array( 'Minify JavaScript',		'f_score_minify',	PERCENT_GRADE),
+				array( 'Total size of minifiable text',	'f_minify_total',	BYTES),
+				array( 'Potential text minification savings',
+									'f_minify_savings',	BYTES),
+				array( 'No cookies for static assets',	'f_score_cookies',	PERCENT_GRADE),
+				array( 'No Etags',			'f_score_etags',	PERCENT_GRADE)
+			),
 		)
 	)
 );
@@ -630,7 +708,7 @@ function validateURL($url, $outputerror = true) {
 </head>
 <body>
 <h1>Bad Request: ShowSlow beacon</h1>
-<p>URL doesn't match any URLs allowed allowed to this instance.</p>
+<p>URL doesn't match any <a href="http://www.showslow.org/Advanced_configuration_options#Limit_URLs_accepted">URLs allowed</a> by this instance.</p>
 </body></html>
 <?php 
 		exit;

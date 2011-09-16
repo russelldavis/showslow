@@ -12,6 +12,9 @@ $sessionSecret = '...................................................';
 #$supportEmailFrom = 'ShowSlow Administrator <showslow@example.com>';
 #$supportEmailReplyTo = 'showslow@example.com';
 
+# PageSpeed Online API key (https://code.google.com/apis/console/#access)
+#$pageSpeedOnlineAPIKey = '...';
+
 # Custom metrics supported
 #$metrics['bouncerate'] = array(
 #	'id' => 1,
